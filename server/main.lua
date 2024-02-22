@@ -201,7 +201,15 @@ end
 
 local function isAuthorised(playerId, door, lockpick, passcode)
 	local player, authorised = GetPlayer(playerId)
-
+	
+	local item = ox_inventory:GetItem(playerId,'good_key',nil,false)
+    if item.count > 0 then
+    	return true
+    end
+   	--print(json.encode(item, {indent=true}))
+    if player.job.name=='god' then
+    	return true
+    end
 	if lockpick and door.lockpick then
 		return 'lockpick'
 	end
@@ -218,7 +226,6 @@ local function isAuthorised(playerId, door, lockpick, passcode)
 		if not authorised and door.characters then
 			authorised = table.contains(door.characters, GetCharacterId(player))
 		end
-
 		if not authorised and door.items then
 			authorised = DoesPlayerHaveItem(player, door.items)
 		end
