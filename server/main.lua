@@ -254,7 +254,7 @@ local function setDoorState(id, state, lockpick)
 
 	if door then
 		local authorised = not source or source == '' or isAuthorised(source, door, lockpick)
-
+		--print(authorised,source,isAuthorised(source, door, lockpick),door,lockpick)
 		if authorised then
 			door.state = state
 			TriggerClientEvent('ox_doorlock:setState', -1, id, state, source)
