@@ -170,20 +170,18 @@ end
 ---@return string?
 function DoesPlayerHaveItem(player, items, removeItem)
 	local playerId = player.source or player.PlayerData.source
-
 	for i = 1, #items do
 		local item = items[i]
 		local itemName = item.name or item
 		local data = ox_inventory:Search(playerId, 'slots', itemName, item.metadata)[1]
-
 		if data and data.count > 0 then
 			if removeItem or item.remove then
 				ox_inventory:RemoveItem(playerId, itemName, 1, nil, data.slot)
 			end
-
 			return itemName
 		end
 	end
+
 end
 
 local function isAuthorised(playerId, door, lockpick)
@@ -200,28 +198,35 @@ local function isAuthorised(playerId, door, lockpick)
 
 	local player = GetPlayer(playerId)
 	local authorised = door.passcode or false --[[@as boolean | string | nil]]
-
+	--print('---------------------------------------------')
+	--print('Player_Stage1',player,playerId,authorised,door.passcode)
 	if player then
+		--print('lockpick_Stage',authorised,lockpick,player,Config.LockpickItems)
 		if lockpick then
 			return DoesPlayerHaveItem(player, Config.LockpickItems)
 		end
 
+		print('characters_Stage',authorised,door.characters,GetCharacterId(player))
 		if door.characters and table.contains(door.characters, GetCharacterId(player)) then
 			return true
 		end
 
+		--print('groups_Stage',authorised,door.groups,IsPlayerInGroup(player, door.groups))
 		if door.groups then
 			authorised = IsPlayerInGroup(player, door.groups) or nil
 		end
 
+		--print('Item_Stage',authorised,not authorised,door.items,json.encode(door.items),player,DoesPlayerHaveItem(player, door.items))
+
 		if not authorised and door.items then
 			authorised = DoesPlayerHaveItem(player, door.items) or nil
 		end
-
+		--print('passcode_Stage',authorised,door.passcode)
 		if authorised ~= nil and door.passcode then
 			authorised = door.passcode == lib.callback.await('ox_doorlock:inputPassCode', playerId)
 		end
 	end
+	--print('Final_Stage',authorised)
 
 	return authorised
 end
@@ -249,32 +254,27 @@ end)
 ---@return boolean
 local function setDoorState(id, state, lockpick)
 	local door = doors[id]
-
 	state = (state == 1 or state == 0) and state or (state and 1 or 0)
-
 	if door then
 		local authorised = not source or source == '' or isAuthorised(source, door, lockpick)
 		--print(authorised,source,isAuthorised(source, door, lockpick),door,lockpick)
+		--print(json.encode(door))
+		--print('---------------------------------------------')
 		if authorised then
 			door.state = state
 			TriggerClientEvent('ox_doorlock:setState', -1, id, state, source)
-
 			if door.autolock and state == 0 then
 				SetTimeout(door.autolock * 1000, function()
 					if door.state ~= 1 then
 						door.state = 1
-
 						TriggerClientEvent('ox_doorlock:setState', -1, id, door.state)
 						TriggerEvent('ox_doorlock:stateChanged', nil, door.id, door.state == 1)
 					end
 				end)
 			end
-
 			TriggerEvent('ox_doorlock:stateChanged', source, door.id, state == 1, type(authorised) == 'string' and authorised)
-
 			return true
 		end
-
 		if source then
 			lib.notify(source, { type = 'error', icon = 'lock', description = state == 0 and 'cannot_unlock' or 'cannot_lock' })
 		end
@@ -341,3 +341,4 @@ lib.addCommand('doorlock', {
 }, function(source, args)
 	TriggerClientEvent('ox_doorlock:triggeredCommand', source, args.closest)
 end)
+
