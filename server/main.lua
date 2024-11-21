@@ -207,7 +207,7 @@ local function isAuthorised(playerId, door, lockpick)
 			return DoesPlayerHaveItem(player, Config.LockpickItems)
 		end
 
-		print('characters_Stage',authorised,door.characters,GetCharacterId(player))
+		--print('characters_Stage',authorised,door.characters,GetCharacterId(player))
 		if door.characters and table.contains(door.characters, GetCharacterId(player)) then
 			return true
 		end
