@@ -333,6 +333,25 @@ CreateThread(function()
 				lib.showTextUI(ClosestDoor.state == 0 and lockDoor or unlockDoor)
 				showUI = ClosestDoor.state
 			end
+			local door = ClosestDoor
+			local double = ClosestDoor.doors
+			if ClosestDoor.doors then
+				DoorSystemSetDoorState(double[1].hash, door.state, false, false)
+				DoorSystemSetDoorState(double[2].hash, door.state, false, false)
+
+				if door.holdOpen then
+					DoorSystemSetHoldOpen(double[1].hash, door.state == 0)
+					DoorSystemSetHoldOpen(double[2].hash, door.state == 0)
+				end
+
+				while door.state == 1 and (not IsDoorClosed(double[1].hash) or not IsDoorClosed(double[2].hash)) do Wait(0) end
+			else
+				DoorSystemSetDoorState(door.hash, door.state, false, false)
+
+				if door.holdOpen then DoorSystemSetHoldOpen(door.hash, door.state == 0) end
+				while door.state == 1 and not IsDoorClosed(door.hash) do Wait(0) end
+			end
+
 
 			if not PickingLock and IsDisabledControlJustReleased(0, 38) then
 				useClosestDoor()
